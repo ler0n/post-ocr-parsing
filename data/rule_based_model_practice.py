@@ -30,10 +30,11 @@ def isEnglishOrKorean(input):
         return 'else'
 # 이름인지 확인
 def isname(input,input_original,language,last_name_list,last_name_list_en,first_name_list):
-    #특수문자로 이름 판별
+    # 변수 선언
     cnt=0
     a=0
     answer=0
+    #특수문자로 이름 판별
     for i in input_original:
         if ((ord('0') <= ord(i) <= ord('9')) 
          or (ord('가') <= ord(i) <= ord('힣'))
@@ -48,16 +49,11 @@ def isname(input,input_original,language,last_name_list,last_name_list_en,first_
         else:
             cnt+=1
     if cnt>=1:
-        return 0, 0
+        return answer,0
     if language=="한국어":
         if input[0] in last_name_list:
             if input[1:] in first_name_list:
                 answer="1Name: "+input
-                return answer, 0
-            else:
-                return 0, 0
-        else:
-            return 0, 0
     #영어 성씨 추가 필요
     elif language=="영어":
         for last_name_en in last_name_list_en:
@@ -67,9 +63,7 @@ def isname(input,input_original,language,last_name_list,last_name_list_en,first_
             #     print(input,len(input),input[0:len(last_name_en)],len(last_name_en),"kim")
             if (input[0:len(last_name_en)] == last_name_en) and len(input)<25:
                 answer="2English name: "+ input
-                return answer, 0
-        else:
-            return 0, 0
+    #혼합되어 있는 경우
     elif language=="mixed":
         if (ord('가') <= ord(input[0]) <= ord('힣')):
             ch='k'
@@ -83,21 +77,16 @@ def isname(input,input_original,language,last_name_list,last_name_list_en,first_
             if ch!=ch2:
                 a=i
                 if ch=='k':
-                    answer= "1Name: "+input[0:i]
+                    if input[0] in last_name_list:
+                        if input[1:i] in first_name_list:
+                            answer= "1Name: "+input[0:i]
                 else:
-                    answer="2English name: "+ input[0:i]
+                    for last_name_en in last_name_list_en:
+                        if (input[0:len(last_name_en)] == last_name_en):
+                            answer="2English name: "+ input[0:i]
                 break
-        return answer, a
-    else:
-        return 0,0
-    # else:
-    #     input1='asdf'
-    #     input2='asdf'
-    #     if input[0] in last_name_list_en and len(input)<=50:
-    #         print(f"Name(English name): {input1}, {input2}")       
-    #         return 0
-    #     else:
-    #         return False
+    return answer,a
+
 
 # 전화번호인지 확인
 def isnum(input,input_original,catbef):
@@ -204,6 +193,7 @@ def isnum(input,input_original,catbef):
         return number, a
     else:
         return 0, 0
+
 # 직위/직책인지 확인
 def isposition(input_original, position_list):
     # 직위 직책 리스트 추가 필요, 조건을 뒤에 포함 느낌으로 바꿔야 함
