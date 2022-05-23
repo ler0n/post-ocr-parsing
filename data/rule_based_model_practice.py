@@ -1,15 +1,3 @@
-# 소문자로 변환한 것 만들기
-# 이름
-    # 한국인: length, 성씨 이용 +(이름 리스트 이용)
-    # 외국인: length, 성씨 이용 +(이름 리스트 이용)
-    # 한국어랑 영어가 섞인 이름은 없다고 가정. -->한/영 연속 작성 시 한국어이름(영어이름) 출력
-# e-mail: @이용
-# 전화번호
-    # 10-12자리 숫자 이용
-    # 회사번호와 휴대폰 번호는 앞자리 이용하기
-# 직위/직책: 리스트 이용
-
-# 대문자를 소문자로 변환
 import os
 import pandas as pd
 import pickle
@@ -39,9 +27,22 @@ def isEnglishOrKorean(input):
     else :
         return 'mixed'
 # 이름인지 확인
-def isname(input,language,last_name_list,last_name_list_en,first_name_list):
-    #영어 성씨, 한국어 성씨 추가 필요
-
+def isname(input,input_original,language,last_name_list,last_name_list_en,first_name_list):
+    #특수문자로 이름 판별
+    cnt=0
+    for i in input_original:
+        if ((ord('0') <= ord(i) <= ord('9')) 
+         or (ord('가') <= ord(i) <= ord('힣'))
+         or (ord('a') <= ord(i.lower()) <= ord('z'))
+         or ord('A') <= ord(i.lower()) <= ord('Z')
+         or i=='-'
+         or i==' '
+        ):
+            continue
+        else:
+            cnt+=1
+    if cnt>=1:
+        return 0
     if language=="한국어":
         if input[0] in last_name_list:
             if input[1:] in first_name_list:
@@ -49,6 +50,7 @@ def isname(input,language,last_name_list,last_name_list_en,first_name_list):
                 return answer
         else:
             return 0
+    #영어 성씨 추가 필요
     elif language=="영어":
         for last_name_en in last_name_list_en:
             # if last_name_en=="kim":
@@ -71,10 +73,10 @@ def isname(input,language,last_name_list,last_name_list_en,first_name_list):
 
 # 전화번호인지 확인
 def isnum(input,input_original,catbef):
+    a=0
     fax=["fax"]
     tel=["tel","t"]
     phone=["phone","mobile","m"]
-## phone, 기타 구분 필요
     temp=''
     # 앞자리 리스트 만들기
     nat_list=['82']
@@ -88,11 +90,7 @@ def isnum(input,input_original,catbef):
     for tel in tel_list:
         temp=tel[1:]
         n_tel_list.append(temp)
-    # for c in input:
-    #     if ord('0') <= ord(c) <= ord('9'):
-    #         temp+=c
-    #     else:
-    #         break
+
     # 종류 구분하기
     cat=''
     small_input=input_original.lower()
@@ -100,17 +98,31 @@ def isnum(input,input_original,catbef):
     for c in input:
         if ord('0') <= ord(c) <= ord('9'):
             temp+=c
-    if (temp[2:4] in n_phone_list) or (temp[0:3] in phone_list):
-        cat="phone"
-    elif temp[2:4] in n_tel_list or  temp[0:3] in n_tel_list:
-        for fax_str in fax:
-            if fax_str in small_input:
-                cat="fax"
+    for nat_num in nat_list:
+        if len(nat_num)<len(temp):
+            if nat_num==temp[0:len(nat_num)]:
+                if temp[len(nat_num):len(nat_num)+2] in n_phone_list:
+                    cat="phone"
+                elif temp[len(nat_num):len(nat_num)+2] in n_tel_list:
+                    for fax_str in fax:
+                        # if fax_str in small_input:
+                        if fax_str in input:
+                            cat="fax" 
+                    else:
+                        cat="tel"
+    if cat=="":
+        if temp[0:3] in phone_list:
+            cat="phone"
+        elif temp[0:3] in tel_list:
+            for fax_str in fax:
+                # if fax_str in small_input:
+                if fax_str in input[0:9]:
+                    cat="fax"
+                # print(temp,small_input)               
+            if cat=='':
+                cat="tel"
         else:
-            cat="tel"
-    else:
-        return 0
-
+            return 0, 0
 
     # for fax_str in fax:
     #     if fax_str in small_input:
@@ -137,11 +149,17 @@ def isnum(input,input_original,catbef):
     
     # 번호면 print
     temp=''
-    for c in input:
-        if ord('0') <= ord(c) <= ord('9'):
-            temp+=c
-        elif temp!='' and (ord('0') >= ord(c) or ord(c) >= ord('9')):
-            break
+    for c in range(len(input)):
+        if ord('0') <= ord(input[c]) <= ord('9'):
+            temp+=input[c]
+            cnt=0
+        elif temp!='' and (ord('0') >= ord(input[c]) or ord(input[c]) >= ord('9')):
+            cnt=cnt+1
+            if cnt>2:
+                a=c
+                break
+                # isnum(input[c-2:],input_original[c-2:],1)
+
     # print(temp,input)
     # for c in range(len(input_original)):
     #     if ord('0') <= ord(input_original[c]) <= ord('9'):
@@ -155,13 +173,12 @@ def isnum(input,input_original,catbef):
     if temp.isdigit()==True and len(temp)<=13 and len(temp)>=9:
         # print('ok')
         number="3"+cat+": "+temp
-        return number
+        return number, a
     else:
-        return 0
+        return 0, 0
 # 직위/직책인지 확인
-def isposition(input_original):
+def isposition(input_original, position_list):
     # 직위 직책 리스트 추가 필요, 조건을 뒤에 포함 느낌으로 바꿔야 함
-    position_list=['대표','과장','차장','대표이사','대리','사원']
     for position in position_list:
         if position in input_original:
             pos_answer="4Position: " +input_original
@@ -202,17 +219,19 @@ def mainfun(inputlist):
         input_changed.append(temp)
     # print(input_changed)
     for i in range(len(input_changed)):
+        f=2 
         if input_changed!='':
             language=isEnglishOrKorean(input_changed[i])
-            c = isposition(inputlist[i])
+            c = isposition(inputlist[i],position_list)
             if c==0:
-                a = isname(input_changed[i],language,last_name_list,last_name_list_en,first_name_list)
+                a = isname(input_changed[i],inputlist[i],language,last_name_list,last_name_list_en,first_name_list)
                 if a!=0:
                     answer.append(a)
-            b = isnum(input_changed[i],inputlist[i],catbef)
+            while f>=2:
+                b, f = isnum(input_changed[i][f-2:],inputlist[i][f-2:],catbef)
+                if b!=0:
+                    answer.append(b)
             d = isemail(inputlist[i])
-        if b!=0:
-            answer.append(b)
         if c!=0:
             answer.append(c)
         if d!=0:
@@ -236,7 +255,7 @@ inputlist2=['(주)지금융코리아',
  '?<1',
  'Good|.N9I1질※onaCoLL/1',
  '서울영등포구선유로13길25.513호',
- 'TEL:1324-1234/FAX:1234-1234',
+ 'TEL:070-1324-1234/FAX:070-1234-1234',
  'Mobile:010-1234-5678',
  'E-øa1:GIK2020ønaver.com',
  '차은우',
@@ -257,8 +276,32 @@ inputlist4=['재무관리실회계팀',
  '04616서울시중구동호로310',
  '김태광',
  '태광산업']
+inputlist5=['김지원',
+'kimjiwon',
+'jiwon-kim',
+'kim ji-won',
+'전민규',
+'김민규',
+'전지원',
+'정 준우',
+'KimJiwon',
+ '구  창  회',
+ '과장',
+ 'A팀부장',
+ 'ceo',
+ 'CEO',
+ 'T07012345678',
+ 'T070-1234-5678',
+ 'fax07012341342',
+ '(+)82-10-5364-5693',
+ '8210-5364-5693',
+ '827012345678',
+ 'Ekim00@taekWang.cokr',
+ '04616서울시중구동호로310',
+ '태광산업']
 mainfun(inputlist)
 mainfun(inputlist2)
 mainfun(inputlist3)
 mainfun(inputlist4)
+mainfun(inputlist5)
 #return 할 때에는 original 값으로 return
