@@ -8,40 +8,46 @@ from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 import sys
-from utils import *
 
 local_num = ['02','051','053','032', '062','042','052','044','031','033','043','041','063','061','054','055','064','070']
 parser_num = [' ','-', '.']
 email = ['@gmail.com','@outlook.kr', '@outlook.com', '@hotmail.com', '@icloud.com', '@mac.com', '@me.com', '@naver.com', '@hanmail.net',
         '@daum.net', '@nate.com', '@kakao.com', '@citizen.seoul.kr', '@yahoo.co.jp', '@yahoo.com', '@yandex.com', '@yandex.ru']
 id_cand = list('abcdefghizklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.')
+optional_heads = [['','',''],['','',''],['','',''],['','',''],['','',''],['','',''],['','',''],['','',''],['','',''],
+                  ['T.', 'M.', 'E.'], ['Tel.', 'Mobile.', 'Email.'], ['tel.', 'mob.', 'mail.'],['t.', 'm.', 'e.'],
+                 ['T:', 'M:', 'E:'], ['Tel:', 'Mobile:', 'Email:'], ['tel:', 'mob:', 'mail:'],['t:', 'm:', 'e:']]
 
-def email_address():
+def email_address(heads):
     id = ''
     n = random.randint(4,15)
     i = 0
     while i!=n:
         id+=random.choice(id_cand)
         i+=1
-    return id + random.choice(email)
+    label = id + random.choice(email)
+    return (heads[2] + ' ' + label, label) 
 
-def h_num(i):
+def ph_num(i, heads):
     if random.random()> 0.5:
-        return None
+        return (None, '')
     else:
         local = random.choice(local_num)
         tmp = [local, str(random.randint(100,10000)) , str(random.randint(1000,10000))]
-        return parser_num[i].join(tmp)
+        label = ''.join(tmp)
+        return (heads[0] + ' ' + parser_num[i].join(tmp), label)
     
-def phone_num(i):
+def mob_num(i, heads):
     tmp = ['010', str(random.randint(1,10000)).zfill(4) , str(random.randint(1,10000)).zfill(4)]
-    return parser_num[i].join(tmp)
+    label = ''.join(tmp)            
+    return (heads[1] + ' ' + parser_num[i].join(tmp), label)
             
 def name():
     tmp = [random.choice(last_name_list) , random.choice(first_name_list)]
+    label = ''.join(tmp)
     if random.random()> 0.5:
-        return ''.join(tmp)
-    return ' '.join(tmp)
+        return ''.join(tmp), label
+    return ' '.join(tmp), label
 
 def position():
     return random.choice(position_list)
@@ -53,9 +59,16 @@ with open("./pickle/last_name_list.pickle","rb") as f:
 with open("./pickle/position_list.pickle","rb") as f:
     position_list = pickle.load(f)
     
-def random_info():
+def random_info(heads):
     i = random.randint(0,2)
-    return  h_num(i), phone_num(i), email_address(), name(), position()
+    phone_num, phone_label = ph_num(i,heads)
+    mobile_num, mobile_label = mob_num(i, heads)
+    email_add, email_label = email_address(heads)
+    name_, name_label = name()
+    pos = position()
+    
+    print('labels: ', (phone_label, mobile_label, email_label, name_label, pos))
+    return (phone_num, mobile_num, email_add, name_, pos), (phone_label, mobile_label, email_label, name_label, pos)
 
 def get_logo_pos(k, Xdim, Ydim, new_logo_x):
     y_gap = random.choice([0.2, 0.25, 0.3, 0.35])
@@ -129,7 +142,7 @@ def make_namecard_h(args):
     for _ in range(args.num):
         # 0: 로고 왼쪽, 1: 로고 오른쪽
         k = random.choice([0,1])
-        
+        heads = random.choice(optional_heads)
         logo_file = random.choice(logo_list)
         logo_filename = os.path.join(args.logo_path, logo_file)
 
@@ -158,8 +171,9 @@ def make_namecard_h(args):
 
         # 인적사항을 한줄씩 읽어오면서, 한 번에 명함을 한 장씩 만들겁니다.
         # 명함에 들어갈 정보들만 추출합니다.
-        telephone, cellphone, e_mail, name, division = random_info()
-
+        infomations, labels = random_info(heads)
+        telephone, cellphone, e_mail, name, division = infomations
+                
         # 명함을 저장할 텅빈 템플릿 이미지 생성
         image = Image.new("RGBA", (Xdim, Ydim), "white")
 
