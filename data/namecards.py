@@ -18,4 +18,4 @@ parser.add_argument('--num', type=int, default=10)
 # opt는 parser로 나눈 모든 argument들을 dict 형식으로 가진다.
 args = parser.parse_args()
 
-make_namecard(args)        
+make_namecard_h(args)        

@@ -119,7 +119,7 @@ def get_fonts(font_path):
     font_filename = os.path.join(font_path, font_file)
     return font_filename
 
-def make_namecard(args):
+def make_namecard_h(args):
     
     print("Process Start.")
     
