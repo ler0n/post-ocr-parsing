@@ -1,76 +1,67 @@
 import csv
+import os
+from PIL import Image
+import matplotlib.pyplot as plt
+import numpy as np
+import cv2
 
-with open('0516.csv', 'w', newline='') as csvfile: #
-    fieldnames = ['image_name', 'name', 'address', 'email', 'phone', 'role', 'OCR']
+image_dir = 'data/untracked/' # 이미지들 위치
+csv_dir = '' # csv 파일 위치
+print("csv 추가 -> a, 새로 csv 생성 -> w")
+mode = input("mode: ")
+csv_name = input("Name of the csv file: ")
+
+
+with open(os.path.join(csv_dir, csv_name), mode, newline='', encoding='ISO-8859-1') as csvfile: #
+    fieldnames = ['image_name', 'name', 'email', 'phone', 'position']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-    # 만약 한줄 씩 추가하고 싶다 한다면
-    # 위의 모드를 a 로 바꾸고 밑에 writer.writerheader 를 주석처리하고 돌리세용
-    # 단, 첫 row 는 writer.writerheader 를 같이 돌리셔야 column 이 작성됩니다
-    writer.writeheader()
 
-    writer.writerow({'image_name': '1',
-                      'name': '박지민',
-                      'address': '서울시 강남구 역삼동 668-4번지, 4층',
-                      'email': 'jumboprint@naver.com',
-                      'phone': '02-555-6335',
-                      'role': '대표이사',
-                      'OCR': '',
-                      })
+    if mode == 'w':
+        writer.writeheader()
 
+    files = os.listdir(image_dir)
+    tracked_file = set()
 
-    writer.writerow({'image_name': '2',
-                     'name': '강엔젤',
-                     'address': "엔젤시 엔젤구 엔젤로 1004, 엔젤빌딩 1004층",
-                     'email': 'niacom2014@naver.com',
-                     'phone': '010-0000-0000',
-                     'role': '실장',
-                     'OCR': '',
-                     })
+    for file in files:
+        print('current file: ', file)
+        if input('wanna write data? 1 >> ') != '1':
+            if input('wanna terminate? 1 >> ') == '1':
+                break
+            else:
+                continue
 
-    writer.writerow({'image_name': '3',
-                     'name': '송미라',
-                     'address': '경기도 성남시 분당구 판교로 256번길 7',
-                     'email': 'goodday@naver.com',
-                     'phone': '010-5424-9876',
-                     'role': '원장',
-                     'OCR': '',
-                     })
+        fname = os.path.join(image_dir, file)
+        original = cv2.imread(fname, cv2.IMREAD_COLOR)
+        cv2.imshow('Original', original)
+        print('click the image and type "c" when you ready!')
+        key = cv2.waitKey(0) & 0xFF # buffer
 
-    writer.writerow({'image_name': '4',
-                     'name': '김수지',
-                     'address': 'A, 123-45, Street Name 231 Seoul, Korea',
-                     'email': 'suji@soberano.com',
-                     'phone': '02-123-4567',
-                     'role': '대표',
-                     'OCR': '',
-                     })
+        img_name, name, email, num, pos = '', '', '', '', ''
+        if key == ord('c'):
+            while True:
+                tracked_file.add(file)
+                print('입력중..')
+                img_name = input('사진이름: ')
+                name = input('사람 이름: ')
+                email = input('이메일: ')
+                num = input("전화번호: ")
+                pos = input('직책: ')
 
-    writer.writerow({'image_name': '5',
-                     'name': 'KIM TAE HEE',
-                     'address': "13, TAEBOKSAN-RO 3BEON-GIL, UICHANG-GU, CHANGWON-SI, GYEONGSANGNAM-DO, REPUBLIC OF KOREA",
-                     'email': '',
-                     'phone': '055-282-0321',
-                     'role': 'GENERAL MANAGER',
-                     'OCR': '',
-                     })
+                print('\n')
+                print("작성한 내용")
+                print(f'사진이름: {img_name}\n사람 이름: {name}\n이메일: {email}\n전화번호: {num}\n직책: {pos}')
 
-    writer.writerow({'image_name': '6',
-                     'name': '김보니',
-                     'address': '서울 강남 논현로 123 1층',
-                     'email': 'your_mail@naver.com',
-                     'phone': '010-1234-5678',
-                     'role': '대표',
-                     'OCR': '',
-                     })
+                if input("made mistake?" '1: ') != '1':
+                    break
 
+        writer.writerow({'image_name': img_name,
+                          'name': name,
+                          'email': email,
+                          'phone': num,
+                          'position': pos,
+                          })
 
+        cv2.destroyAllWindows()
 
-# 틀
-# writer.writerow({'image_name': '',
-#                  'name': '',
-#                  'address': '',
-#                  'email': '',
-#                  'phone': '',
-#                  'role': '',
-#                  'OCR': '',
-#                  })
+    print(f'untracked files\n{set(files)-tracked_file}')
+
