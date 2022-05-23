@@ -24,12 +24,16 @@ def isEnglishOrKorean(input):
         return "한국어"  
     elif e_count==length:
         return "영어" 
-    else :
+    elif k_count+e_count>=length-1:
         return 'mixed'
+    else:
+        return 'else'
 # 이름인지 확인
 def isname(input,input_original,language,last_name_list,last_name_list_en,first_name_list):
     #특수문자로 이름 판별
     cnt=0
+    a=0
+    answer=0
     for i in input_original:
         if ((ord('0') <= ord(i) <= ord('9')) 
          or (ord('가') <= ord(i) <= ord('힣'))
@@ -37,19 +41,23 @@ def isname(input,input_original,language,last_name_list,last_name_list_en,first_
          or ord('A') <= ord(i.lower()) <= ord('Z')
          or i=='-'
          or i==' '
+         or i==')'
+         or i=='('
         ):
             continue
         else:
             cnt+=1
     if cnt>=1:
-        return 0
+        return 0, 0
     if language=="한국어":
         if input[0] in last_name_list:
             if input[1:] in first_name_list:
                 answer="1Name: "+input
-                return answer
+                return answer, 0
+            else:
+                return 0, 0
         else:
-            return 0
+            return 0, 0
     #영어 성씨 추가 필요
     elif language=="영어":
         for last_name_en in last_name_list_en:
@@ -59,9 +67,29 @@ def isname(input,input_original,language,last_name_list,last_name_list_en,first_
             #     print(input,len(input),input[0:len(last_name_en)],len(last_name_en),"kim")
             if (input[0:len(last_name_en)] == last_name_en) and len(input)<25:
                 answer="2English name: "+ input
-                return answer
+                return answer, 0
         else:
-            return 0
+            return 0, 0
+    elif language=="mixed":
+        if (ord('가') <= ord(input[0]) <= ord('힣')):
+            ch='k'
+        else:
+            ch='e'
+        for i in range(len(input)):
+            if (ord('가') <= ord(input[i]) <= ord('힣')):
+                ch2='k'
+            else:
+                ch2='e'
+            if ch!=ch2:
+                a=i
+                if ch=='k':
+                    answer= "1Name: "+input[0:i]
+                else:
+                    answer="2English name: "+ input[0:i]
+                break
+        return answer, a
+    else:
+        return 0,0
     # else:
     #     input1='asdf'
     #     input2='asdf'
@@ -219,14 +247,19 @@ def mainfun(inputlist):
         input_changed.append(temp)
     # print(input_changed)
     for i in range(len(input_changed)):
-        f=2 
+        f=2
+        alpha=0 
+        chalpha=0
         if input_changed!='':
             language=isEnglishOrKorean(input_changed[i])
             c = isposition(inputlist[i],position_list)
             if c==0:
-                a = isname(input_changed[i],inputlist[i],language,last_name_list,last_name_list_en,first_name_list)
-                if a!=0:
-                    answer.append(a)
+                while alpha>0 or chalpha==0:
+                    chalpha=1
+                    ans,alpha = isname(input_changed[i][alpha:],inputlist[i][alpha:],language,last_name_list,last_name_list_en,first_name_list)
+                    language=isEnglishOrKorean(input_changed[i][alpha:])
+                    if a!=0:
+                        answer.append(ans)
             while f>=2:
                 b, f = isnum(input_changed[i][f-2:],inputlist[i][f-2:],catbef)
                 if b!=0:
@@ -238,7 +271,7 @@ def mainfun(inputlist):
             answer.append(d)
     n_answer=[]
     for i in answer:
-        if i!=None:
+        if type(i)==type("str"):
             n_answer.append(i)
     n_answer.sort()
     for i in n_answer:
@@ -276,8 +309,8 @@ inputlist4=['재무관리실회계팀',
  '04616서울시중구동호로310',
  '김태광',
  '태광산업']
-inputlist5=['김지원',
-'kimjiwon',
+inputlist5=['김지현(kimjiwonom)',
+'kimjiwonon(김자현)',
 'jiwon-kim',
 'kim ji-won',
 '전민규',
