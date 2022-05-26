@@ -11,8 +11,6 @@ IMG_PATH = 'img'
 SECRET_PATH = '.secret'
 # api 호풀 후 결과 저장 폴더
 RES_PATH = 'res'
-# resize할 이미지 가로길이
-WIDTH = 480
 
 
 def main():
@@ -33,7 +31,7 @@ def main():
     file_list_img = [file for file in file_list if file.split('.')[-1] in ['jpg', 'png', 'jpeg']]
 
     for file_img in file_list_img:
-        img_path = image_preproces(file_img, WIDTH)
+        img_path = os.path.join(IMG_PATH, file_img)
         file_dict = {"file": open(img_path, "rb")}
         response = requests.post(api_url, headers=headers, files=file_dict).json()
         group_list, corpus_list = serialization_by_rule(response)
@@ -63,21 +61,24 @@ def serialization_by_rule(ocr_words):
     for ele in word_list:
         pos = np.array(ele['points']).transpose()
 
-        y_pos = np.mean(pos[1])
+        y_pos = np.mean(pos[1][[0, -1]])
         x_pos = np.mean(pos[0][[0, -1]])
+        height = min(pos[1][-1] - pos[1][0], pos[1][-2] - pos[1][1])
 
-        if ele['text'] in ['I', '|', '/']: pass
+        if ele['text'] == '/': pass
         elif len(group_list) != 0:
             for idx, group in enumerate(group_list):
-                if group['text'] in ['I', '|', '/']: continue
+                if group['text'] == '/': continue
 
-                y_diff = abs(y_pos - np.mean(group['bound'][1]))
-                group_size = ((group['bound'][1][-1] - group['bound'][1][0]) + \
-                              (group['bound'][1][-2] - group['bound'][1][1])) / 2
+                y_diff = abs(y_pos - np.mean(group['bound'][1][[0, -1]]))
+                group_size = min(group['bound'][1][-1] - group['bound'][1][0],
+                              group['bound'][1][-2] - group['bound'][1][1])
                 dis = abs(x_pos - np.mean(group['bound'][0][[1, 2]]))
+                size_diff = abs(height - group_size)
 
-                if (y_diff <= 5 and \
-                    dis <= (group_size*1.2)):
+                if (y_diff <= (group_size*0.25) and \
+                    size_diff <= (group_size*0.25) and \
+                    dis <= (group_size*1.3)):
                     group_list[idx]['bound'][:, 1:3] = pos[:, 1:3]
                     group_list[idx]['text'] += ele['text']
                     corpus_list[idx] += ele['text']
