@@ -120,9 +120,8 @@ def isnum(input,input_original,catbef):
             if nat_num==temp[0:len(nat_num)]:
                 if temp[len(nat_num):len(nat_num)+2] in n_phone_list:
                     cat="phone"
-                elif temp[len(nat_num):len(nat_num)+2] in n_tel_list:
+                elif temp[len(nat_num):len(nat_num)+2] in n_tel_list or  temp[len(nat_num):len(nat_num)+1]=='02':
                     for fax_str in fax:
-                        # if fax_str in small_input:
                         if fax_str in input:
                             cat="fax" 
                     else:
@@ -130,7 +129,7 @@ def isnum(input,input_original,catbef):
     if cat=="":
         if temp[0:3] in phone_list:
             cat="phone"
-        elif temp[0:3] in tel_list:
+        elif temp[0:3] in tel_list or temp[0:2]=='02':
             for fax_str in fax:
                 # if fax_str in small_input:
                 if fax_str in input[0:9]:
@@ -164,7 +163,7 @@ def isnum(input,input_original,catbef):
     
     
     
-    # 번호면 print
+    # 번호면 print, 숫자 아닌 것 연속으로 3개 나오면 끊기
     temp=''
     for c in range(len(input)):
         if ord('0') <= ord(input[c]) <= ord('9'):
@@ -172,12 +171,11 @@ def isnum(input,input_original,catbef):
             cnt=0
         elif temp!='' and (ord('0') >= ord(input[c]) or ord(input[c]) >= ord('9')):
             cnt=cnt+1
-            if cnt>2:
-                a=c
+            if cnt>1:
+                a=c-cnt+1
                 break
                 # isnum(input[c-2:],input_original[c-2:],1)
 
-    # print(temp,input)
     # for c in range(len(input_original)):
     #     if ord('0') <= ord(input_original[c]) <= ord('9'):
     #         new_num=input_original[c:]
@@ -188,8 +186,8 @@ def isnum(input,input_original,catbef):
     #                 break
     #         break
     if temp.isdigit()==True and len(temp)<=13 and len(temp)>=9:
-        # print('ok')
         number="3"+cat+": "+temp
+        print(number)
         return number, a
     else:
         return 0, 0
@@ -237,9 +235,11 @@ def mainfun(inputlist):
         input_changed.append(temp)
     # print(input_changed)
     for i in range(len(input_changed)):
-        f=2
+        # print(input_changed[i])
+        f=0
         alpha=0 
         chalpha=0
+        chbeta=0
         if input_changed!='':
             language=isEnglishOrKorean(input_changed[i])
             c = isposition(inputlist[i],position_list)
@@ -250,8 +250,9 @@ def mainfun(inputlist):
                     language=isEnglishOrKorean(input_changed[i][alpha:])
                     if a!=0:
                         answer.append(ans)
-            while f>=2:
-                b, f = isnum(input_changed[i][f-2:],inputlist[i][f-2:],catbef)
+            while f>0 or chbeta==0:
+                chbeta=1
+                b, f = isnum(input_changed[i][f:],inputlist[i][f:],catbef)
                 if b!=0:
                     answer.append(b)
             d = isemail(inputlist[i])
@@ -268,63 +269,64 @@ def mainfun(inputlist):
         print(i[1:])
     print('----------------------')
 
-inputlist=['Tel','Adress서울시구로디지털로123미리빌딩1층303호먼지상점',
-'Mobile01032420900',
-'김먼지','|nsta',
-'Kakaostore_dust',
-'대표',
-'4store1dust']
-inputlist2=['(주)지금융코리아',
- '?<1',
- 'Good|.N9I1질※onaCoLL/1',
- '서울영등포구선유로13길25.513호',
- 'TEL:070-1324-1234/FAX:070-1234-1234',
- 'Mobile:010-1234-5678',
- 'E-øa1:GIK2020ønaver.com',
- '차은우',
- '00지점I팀장']
-inputlist3=['KIMTAEHEE',
- 'GENERALMANAGER',
- '13,TAEBOKSAN-RO3BEON-GIL,UICHANG-GU,CHANGWON-SI,',
- 'GYEONGSANGNAM-DO.RepublicOFKOREA',
- '055.282.0321',
- 'CLOSEPM12:00',
- 'OPENPM06:00']
-inputlist4=['재무관리실회계팀',
- '과장',
- 'T07012345678',
- 'M01012345678',
- 'Ekim00@taekWang.cokr',
- '태광산업주식회사',
- '04616서울시중구동호로310',
- '김태광',
- '태광산업']
-inputlist5=['김지현(kimjiwonom)',
-'kimjiwonon(김자현)',
-'jiwon-kim',
-'kim ji-won',
-'전민규',
-'김민규',
-'전지원',
-'정 준우',
-'KimJiwon',
- '구  창  회',
- '과장',
- 'A팀부장',
- 'ceo',
- 'CEO',
- 'T07012345678',
- 'T070-1234-5678',
- 'fax07012341342',
- '(+)82-10-5364-5693',
- '8210-5364-5693',
- '827012345678',
- 'Ekim00@taekWang.cokr',
- '04616서울시중구동호로310',
- '태광산업']
-mainfun(inputlist)
-mainfun(inputlist2)
-mainfun(inputlist3)
-mainfun(inputlist4)
-mainfun(inputlist5)
-#return 할 때에는 original 값으로 return
+# inputlist=['Tel','Adress서울시구로디지털로123미리빌딩1층303호먼지상점',
+# 'Mobile01032420900',
+# '김먼지','|nsta',
+# 'Kakaostore_dust',
+# '대표',
+# '4store1dust']
+# inputlist2=['(주)지금융코리아',
+#  '?<1',
+#  'Good|.N9I1질※onaCoLL/1',
+#  '서울영등포구선유로13길25.513호',
+#  'TEL:070-1324-1234/FAX:070-1234-1234',
+#  'Mobile:010-1234-5678',
+#  'E-øa1:GIK2020ønaver.com',
+#  '차은우',
+#  '00지점I팀장']
+# inputlist3=['KIMTAEHEE',
+#  'GENERALMANAGER',
+#  '13,TAEBOKSAN-RO3BEON-GIL,UICHANG-GU,CHANGWON-SI,',
+#  'GYEONGSANGNAM-DO.RepublicOFKOREA',
+#  '055.282.0321',
+#  'CLOSEPM12:00',
+#  'OPENPM06:00']
+# inputlist4=['재무관리실회계팀',
+#  '과장',
+#  'T07012345678',
+#  'M01012345678',
+#  'Ekim00@taekWang.cokr',
+#  '태광산업주식회사',
+#  '04616서울시중구동호로310',
+#  '김태광',
+#  '태광산업']
+# inputlist5=['김지현(kimjiwonom)',
+# 'kimjiwonon(김자현)',
+# 'jiwon-kim',
+# 'kim ji-won',
+# '전민규',
+# '김민규',
+# '전지원',
+# '정 준우',
+# 'KimJiwon',
+#  '구  창  회',
+#  '과장',
+#  'A팀부장',
+#  'ceo',
+#  'CEO',
+#  'T07012345678',
+#  'T070-1234-5678',
+#  'fax07012341342',
+#  '(+)82-10-5364-5693',
+#  '8210-5364-5693',
+#  '827012345678',
+#  'Ekim00@taekWang.cokr',
+#  '04616서울시중구동호로310',
+#  '태광산업']
+inputlist6=['T.043-5502-3185F.02-124-1374M.010-7378-9487']
+# mainfun(inputlist)
+# mainfun(inputlist2)
+# mainfun(inputlist3)
+# mainfun(inputlist4)
+# mainfun(inputlist5)
+mainfun(inputlist6)

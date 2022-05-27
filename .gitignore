@@ -4,11 +4,14 @@
 # image folder
 img/
 image/
+res/
+res2/
 
 # image files
 *.png
 *.jpg
 *.jpeg
+
 
 # excel files
 *.xlsx
