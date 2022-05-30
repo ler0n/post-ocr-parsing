@@ -12,8 +12,11 @@ import argparse
 parser = argparse.ArgumentParser(description='예시')
 parser.add_argument('--font_path', type=str, default='./font')
 parser.add_argument('--logo_path', type=str, default='./logo')
+parser.add_argument('--logo_images', type=str, default='logo_v.02.zip')
+parser.add_argument('--label_path', type=str, default='./labels')
 parser.add_argument('--out_dir', type=str, default='./namecards')
-parser.add_argument('--num', type=int, default=10)
+parser.add_argument('--num', type=int, default=5)
+parser.add_argument('--version', type=int, default=2)
 
 # opt는 parser로 나눈 모든 argument들을 dict 형식으로 가진다.
 args = parser.parse_args()
