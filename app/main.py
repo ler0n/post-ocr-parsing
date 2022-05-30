@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse
 from typing import Optional
 import uvicorn
 import requests
-
+import argparse
 from pydantic import BaseModel, HttpUrl, Field, DirectoryPath
 
 app = FastAPI()
@@ -24,8 +24,17 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.on_event("startup") # 어떤 이미지를 선택했는지 이름을 보여주고, api에 통과시키는 과정을 보여준다
 def startup_event():
-    print("startup event!")
+    print(f"{args.img}")
 
 @app.get("/")
 def homepage(request: Request, response_class=HTMLResponse):
-    return templates.TemplateResponse("main.html", context={'request': request})
+    return templates.TemplateResponse("main.html", context={'request': request, 'image_path': args.img})
+
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='give image path')
+    parser.add_argument('--img', default='static/1.png', help='image path')
+    args = parser.parse_args()
+
+    uvicorn.run(app, host="127.0.0.1", port=8000)
