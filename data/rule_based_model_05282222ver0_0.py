@@ -14,14 +14,14 @@ import metric
 # 초기 설정
 # picklefile 경로
 print("start")
-RES_PATH = 'res2'
+RES_PATH = 'res'
 ANSWER_PATH = 'dataans'
 IMG_PATH = 'img'
 file_list = os.listdir(IMG_PATH)
 file_list_img = [file for file in file_list if file.split('.')[-1] in ['jpg', 'png', 'jpeg']]
 pickle_file_list = os.listdir(RES_PATH)
 pickle_file_list_img = [file for file in pickle_file_list if file.split('.')[-1] in ['pickle']]
-# pickle_file_list_img=pickle_file_list_img[0:200]
+# pickle_file_list_img=pickle_file_list_img[0:10]
 def remove_else(input):
     # 특수문자 제거
     new_string = ''.join(filter(str.isalnum, input))
@@ -440,6 +440,8 @@ def mainfun(inputlist,data_all_list,i):
             answer_name=[answer_name[0][0]]
     if answer_position==[]:
         answer_position=['']
+    else:
+        answer_position=[answer_position[0]]
 
     if answer_email==[]:
         answer_email=['']
@@ -511,7 +513,7 @@ for i in range(len(predict_list)):
         if predict_list[i][0]==(answer[j][0]+"_res.pickle"):
             # print('---------------')
             # for k in range(len(answer[0])-1):
-            for k in range(0,5):
+            for k in range(4,5):
                 if len(answer[j][k+1].replace(' ', ''))!=0:
                     cnt+=1
                     # print(answer[j][k+1],predict_list[i][k+1])
