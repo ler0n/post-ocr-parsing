@@ -7,6 +7,7 @@ import uvicorn
 import requests
 import argparse
 from pydantic import BaseModel, HttpUrl, Field, DirectoryPath
+import serialization
 
 app = FastAPI()
 templates = Jinja2Templates(directory="template/")
@@ -24,7 +25,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.on_event("startup") # 어떤 이미지를 선택했는지 이름을 보여주고, api에 통과시키는 과정을 보여준다
 def startup_event():
-    print(f"{args.img}")
+    result = serialization.main(args.img)
+    print(f"{result['text_list']}")
 
 @app.get("/")
 def homepage(request: Request, response_class=HTMLResponse):

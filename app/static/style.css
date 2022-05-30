@@ -74,7 +74,7 @@ header {
 .infos__tab,
 .infos__data {
   display: flex;
-  justify-content: space-between;;
+  justify-content: space-between;
   align-items: center;
 }
 
