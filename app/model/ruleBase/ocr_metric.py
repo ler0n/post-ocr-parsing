@@ -119,4 +119,4 @@ def cer(ref, hyp):
     dist = Lev.distance(hyp, ref)
     length = len(ref)
     # return dist, length, dist/length
-    return dist /
+    return dist/length

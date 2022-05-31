@@ -6,7 +6,7 @@ import pickle
 import re
 import itertools
 from multiprocessing.connection import answer_challenge
-import metric
+from . import ocr_metric as metric
 
 # cp=os.getcwd()
 # print(cp)
@@ -15,13 +15,15 @@ import metric
 # 초기 설정
 # picklefile 경로
 print("start")
-RES_PATH = 'res'
-ANSWER_PATH = 'dataans'
-IMG_PATH = 'img'
-file_list = os.listdir(IMG_PATH)
-file_list_img = [file for file in file_list if file.split('.')[-1] in ['jpg', 'png', 'jpeg']]
-pickle_file_list = os.listdir(RES_PATH)
-pickle_file_list_img = [file for file in pickle_file_list if file.split('.')[-1] in ['pickle']]
+# RES_PATH = 'res' # 준우님이 넘기신 ocr 결과 피클들인듯?
+# ANSWER_PATH = 'dataans' # cer 계산하는 곳인듯?
+# IMG_PATH = 'img'
+pickle_path = '/Users/changhoe/Desktop/데스크탑/final-project/final-project-level3-recsys-16/app/model/ruleBase/pickle' # 이름 데이터 베이스 파일들 패스
+# file_list = os.listdir(IMG_PATH)
+# file_list_img = [file for file in file_list if file.split('.')[-1] in ['jpg', 'png', 'jpeg']] # 이미지패스
+
+# pickle_file_list = os.listdir(RES_PATH)
+# pickle_file_list_img = [file for file in pickle_file_list if file.split('.')[-1] in ['pickle']] # 준우님이
 
 
 # pickle_file_list_img=pickle_file_list_img[0:10]
@@ -338,25 +340,28 @@ def isemail(input_original):
 
 
 # 파일 불러오기
-with open("./pickle/last_name_list.pickle", "rb") as f:
+
+with open(os.path.join(pickle_path, 'last_name_list.pickle'), "rb") as f:
     last_name_list = pickle.load(f)
 last_name_list = sorted(last_name_list, key=lambda x: -len(x))
-with open("./pickle/first_name_list.pickle", "rb") as f:
+with open(os.path.join(pickle_path, 'first_name_list.pickle'), "rb") as f:
     first_name_list = pickle.load(f)
 first_name_list = sorted(first_name_list, key=lambda x: -len(x))
-with open("./pickle/last_name_list_en.pickle", "rb") as f:
+with open(os.path.join(pickle_path, 'last_name_list_en.pickle'), "rb") as f:
     last_name_list_en_temp = pickle.load(f)
-with open("./pickle/position_list.pickle", "rb") as f:
+with open(os.path.join(pickle_path, 'position_list.pickle'), "rb") as f:
     position_list = pickle.load(f)
 last_name_list_en = []
+
 for i in last_name_list_en_temp:
     a = i.lower()
     last_name_list_en.append(a)
 
 
 # main
-def mainfun(inputlist, data_all_list, i):
+def mainfun(serialized):
     # input change
+    inputlist, data_all_list = serialized['text_list'], serialized['all']
     answer_name, answer_number, answer_phone, answer_tel, answer_position, answer_email = [], [], [], [], [], []
     left_axis_list = []
     right_axis_list = []
@@ -488,7 +493,7 @@ def mainfun(inputlist, data_all_list, i):
     else:
         answer_phone = [answer_phone[0]]
 
-    answer_f = [pickle_file]
+    answer_f = list(serialized)  # 던져지는 리스트인듯?
     predict = (
             answer_f
             + answer_name
@@ -506,49 +511,56 @@ def mainfun(inputlist, data_all_list, i):
     #     print(i[1:])
 
 
-# API 결과 불러오기
-predict_list = []
-predict_name = 0
+# # API 결과 불러오기
+# predict_list=[]
+# predict_name=0
+# for pickle_file in pickle_file_list_img:
+#     res_file = os.path.join(RES_PATH, pickle_file)
+#     with open(res_file,"rb") as fr:
+#         data = pickle.load(fr)
+#     data_list=data["text_list"]
+#     data_all_list=data["all"]
+#     predict=mainfun(data_list,data_all_list, pickle_file)
+#     # if len(predict)==6:
+#     predict_list.append(predict)
 
-data_list = data["text_list"]
-data_all_list = data["all"]
-predict = mainfun(data_list, data_all_list, pickle_file)  #
-# if len(predict)==6:
-predict_list.append(predict)
 
+
+# metric 계산하는 곳 같음
 
 # answerfile load
-answer_file = pd.read_csv(os.path.join(ANSWER_PATH, 'namelist.csv'), dtype=str)
-answer_file = answer_file.replace(np.nan, '', regex=True)
-answer = []
-cnt = 0
-cer_value_sum = 0
-for i in file_list_img:
-    answer_temp = answer_file.loc[answer_file['image_name'] == i]
-    answer_temp = list(itertools.chain(*answer_temp.values.tolist()))
-    answer.append(answer_temp)
-print("list making is done")
-cntchk = 0
-for i in range(len(predict_list)):
-    # if len(predict_list[i])!=6:
-    #     cntchk+=1
-    for j in range(len(answer)):
-        if predict_list[i][0] == (answer[j][0] + "_res.pickle"):
-            # print('---------------')
-            # for k in range(len(answer[0])-1):
-            for k in range(4, 5):
-                if len(answer[j][k + 1].replace(' ', '')) != 0:
-                    cnt += 1
-                    # print(answer[j][k+1],predict_list[i][k+1])
-                    # print('---------------------------')
-                    # print(answer[j][k+1],predict_list[i][k+1])
-                    cer_value = metric.cer(answer[j][k + 1], predict_list[i][k + 1])
-                    if cer_value != 0:
-                        # print(answer[j][k+1],predict_list[i][k+1],predict_list[i],"check")
-                        # print(answer[j][k+1],predict_list[i][k+1],"check")
-                        # print(cer_value)
-                        cntchk += 1
-                    cer_value_sum += cer_value
-print("CER is", cer_value_sum / cnt)
-# print(cntchk)
+# answer_file = pd.read_csv(os.path.join(ANSWER_PATH, 'namelist.csv'), dtype=str)
+# answer_file = answer_file.replace(np.nan, '', regex=True)
+# answer = []
+# cnt = 0
+# cer_value_sum = 0
+
+# for i in file_list_img:  ### IMG PATH 사용
+#     answer_temp = answer_file.loc[answer_file['image_name'] == i]
+#     answer_temp = list(itertools.chain(*answer_temp.values.tolist()))
+#     answer.append(answer_temp)
+# print("list making is done")
+# cntchk = 0
+# for i in range(len(predict_list)):
+#     # if len(predict_list[i])!=6:
+#     #     cntchk+=1
+#     for j in range(len(answer)):
+#         if predict_list[i][0] == (answer[j][0] + "_res.pickle"):
+#             # print('---------------')
+#             # for k in range(len(answer[0])-1):
+#             for k in range(4, 5):
+#                 if len(answer[j][k + 1].replace(' ', '')) != 0:
+#                     cnt += 1
+#                     # print(answer[j][k+1],predict_list[i][k+1])
+#                     # print('---------------------------')
+#                     # print(answer[j][k+1],predict_list[i][k+1])
+#                     cer_value = metric.cer(answer[j][k + 1], predict_list[i][k + 1])
+#                     if cer_value != 0:
+#                         # print(answer[j][k+1],predict_list[i][k+1],predict_list[i],"check")
+#                         # print(answer[j][k+1],predict_list[i][k+1],"check")
+#                         # print(cer_value)
+#                         cntchk += 1
+#                     cer_value_sum += cer_value
+# print("CER is", cer_value_sum / cnt)
+# # print(cntchk)
 # print(cnt)

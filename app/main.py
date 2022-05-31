@@ -8,8 +8,8 @@ import requests
 import argparse
 from pydantic import BaseModel, HttpUrl, Field, DirectoryPath
 import serialization
-import model.rulebase.rule_base as rule
-import model.rulebase.metric
+import model.ruleBase.rule_base as rule
+
 
 app = FastAPI()
 templates = Jinja2Templates(directory="template/")
@@ -27,13 +27,17 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.on_event("startup") # 어떤 이미지를 선택했는지 이름을 보여주고, api에 통과시키는 과정을 보여준다
 def startup_event():
-    result = serialization.main(args.img)
-    r = rule(result)
-    print(f"{result}")
+
+    print(f"{args.img} parsing starts")
 
 @app.get("/")
 def homepage(request: Request, response_class=HTMLResponse):
-    return templates.TemplateResponse("main.html", context={'request': request, 'image_path': args.img})
+    result = serialization.main(args.img)
+    r = rule.mainfun(result)
+    name, email, tel, phone, position = r[2:]
+    return templates.TemplateResponse("main.html", context={'request': request, 'image_path': args.img, 'name': name,
+                                                            'email': email, 'tel': tel, 'phone': phone,
+                                                            'position': position})
 
 
 

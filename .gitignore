@@ -1,6 +1,7 @@
 # secert key folder
 .secret/
 key.json
+
 # image folder
 img/
 image/
