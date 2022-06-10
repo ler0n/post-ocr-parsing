@@ -7,6 +7,8 @@ import re
 import itertools
 from multiprocessing.connection import answer_challenge
 import metric
+from sklearn import metrics
+# import sklearn imp
 # cp=os.getcwd()
 # print(cp)
 # print(os.listdir(cp))
@@ -14,9 +16,14 @@ import metric
 # 초기 설정
 # picklefile 경로
 print("start")
-RES_PATH = 'res'
-ANSWER_PATH = 'dataans'
-IMG_PATH = 'img'
+RES_PATH = 'res_real_img'
+# RES_PATH = 'res_making_img'
+ANSWER_PATH = 'data_answer'
+ANSWER_FILENAME='real_data2.csv'
+# ANSWER_FILENAME='testset_121.csv'
+IMG_PATH = 'real_img'
+# IMG_PATH = 'making_img'
+
 file_list = os.listdir(IMG_PATH)
 file_list_img = [file for file in file_list if file.split('.')[-1] in ['jpg', 'png', 'jpeg']]
 pickle_file_list = os.listdir(RES_PATH)
@@ -264,6 +271,7 @@ def isposition(input_original, position_list,language,last_name_list,last_name_l
                     pos_answer=input_original
                 else:
                     pos_answer=input_original[len(ans):]
+                pos_answer=position
                 # pos_answer="4Position: " +input_original
     elif language=="영어" or language=="mixed":
         for position in position_list:
@@ -273,6 +281,7 @@ def isposition(input_original, position_list,language,last_name_list,last_name_l
                     pos_answer=input_original[:-len(position)]+position
                 else:
                     pos_answer=input_original[len(ans):-len(position)]+position
+                pos_answer=position
                 # pos_answer="4Position: " +input_original
                 # pos_answer=input_original[:-len(position)]+position
     # elif language=="mixed":
@@ -307,6 +316,7 @@ def isemail(input_original):
                         if len(input_original)>len(i):
                             if i.lower()==input_original[0:len(i)].lower():
                                 pos_answer= input_original[len(i):]
+                                # 후처리 x
                     if pos_answer==0:
                         pos_answer=input_original
 
@@ -315,6 +325,7 @@ def isemail(input_original):
             if len(input_original)>len(i):
                 if i.lower()==input_original[0:len(i)].lower():
                     pos_answer= input_original[len(i):]
+                    # 후처리 x
         if pos_answer==0:
             pos_answer=input_original
     return pos_answer
@@ -406,9 +417,9 @@ def mainfun(inputlist,data_all_list,i):
             name_with_height=[name_candidate,int(height),int(left_axis),int(right_axis),language_of_text]
             answer_name.append(name_with_height)
     # 축 및 좌표 기준 설정
-    left_axis_name_norm=(sum(left_axis_list))/(len(left_axis_list))
-    right_axis_name_norm=(sum(right_axis_list))/(len(right_axis_list))
-    height_norm=sum(height_list)/len(height_list)
+    left_axis_name_norm=(sum(left_axis_list))/(len(left_axis_list)+0.0000001)
+    right_axis_name_norm=(sum(right_axis_list))/(len(right_axis_list)+0.0000001)
+    height_norm=sum(height_list)/(len(height_list)+0.0000001)
 
     if answer_name==[]:
         answer_name=['']
@@ -469,9 +480,10 @@ def mainfun(inputlist,data_all_list,i):
     predict=(
         answer_f
         +answer_name
-        +answer_email
+        +[""]
         +answer_tel
         +answer_phone
+        +answer_email
         +answer_position
         )
     return predict
@@ -495,39 +507,120 @@ for pickle_file in pickle_file_list_img:
     # if len(predict)==6:
     predict_list.append(predict)
 #answerfile load
-answer_file=pd.read_csv(os.path.join(ANSWER_PATH, 'namelist.csv'),dtype=str)
+answer_file=pd.read_csv(os.path.join(ANSWER_PATH, ANSWER_FILENAME),dtype=str)
 answer_file=answer_file.replace(np.nan, '', regex=True)
 answer=[]
 cnt=0
 cer_value_sum=0
 for i in file_list_img:
-    answer_temp=answer_file.loc[answer_file['image_name']==i]
+    answer_temp=answer_file.loc[answer_file['file_name']==i]
     answer_temp=list(itertools.chain(*answer_temp.values.tolist()))
     answer.append(answer_temp)
+# print(answer)
 print("list making is done")
 cntchk=0
+###
+cer_norm=0.2
+y_pred=[]
+y_true=[]
+# print(answer)
 for i in range(len(predict_list)):
-    # if len(predict_list[i])!=6:
-    #     cntchk+=1
     for j in range(len(answer)):
-        if predict_list[i][0]==(answer[j][0]+"_res.pickle"):
-            # print('---------------')
-            # for k in range(len(answer[0])-1):
-            for k in range(4,5):
-                if len(answer[j][k+1].replace(' ', ''))!=0:
+        # print(predict_list[i][0])
+        # print(answer[j][6])
+        if predict_list[i][0]==(answer[j][6]+"_res.pickle"):
+            for k in range(0,6):
+                if len(answer[j][k].replace(' ', ''))!=0:
                     cnt+=1
-                    # print(answer[j][k+1],predict_list[i][k+1])
-                    # print('---------------------------')
-                    # print(answer[j][k+1],predict_list[i][k+1])
-                    cer_value=metric.cer(answer[j][k+1],predict_list[i][k+1])
-                    if cer_value!=0:
-                        # print(answer[j][k+1],predict_list[i][k+1],predict_list[i],"check")
-                        # print(answer[j][k+1],predict_list[i][k+1],"check")
-                        # print(cer_value)
-                        cntchk+=1
-                    cer_value_sum+=cer_value
-print("CER is",cer_value_sum/cnt)
-# print(cntchk)
+                    cer_value=metric.cer(answer[j][k],predict_list[i][k+1])
+                else:
+                    cer_value=1
+                if answer[j][k]!="":
+                    y_true.append(1)
+                else:
+                    y_true.append(0)
+                if cer_value<=cer_norm:
+                    y_pred.append(1)
+                else:
+                    y_pred.append(0)
+                # if answer[j][k]!="":
+                #     y_true.append(k)
+                # else:
+                #     y_true.append(6)
+                # if cer_value<=cer_norm:
+                #     y_pred.append(k)
+                # else:
+                #     y_pred.append(6)
+# print(y_true)
+# print(y_pred)
+print(predict_list)
+y_pred_name=[]
+y_true_name=[]
+
+y_pred_en_name=[]
+y_true_en_name=[]
+
+y_pred_tel=[]
+y_true_tel=[]
+
+y_pred_phone=[]
+y_true_phone=[]
+
+y_pred_email=[]
+y_true_email=[]
+
+y_pred_position=[]
+y_true_position=[]
+
+for i in range(len(y_true)):
+    if i%6==0:
+        y_pred_name.append(y_pred[i])
+        y_true_name.append(y_true[i])
+    elif i%6==1:
+        y_pred_en_name.append(y_pred[i])
+        y_true_en_name.append(y_true[i])
+    elif i%6==2:
+        y_pred_tel.append(y_pred[i])
+        y_true_tel.append(y_true[i])
+    elif i%6==3:
+        y_pred_phone.append(y_pred[i])
+        y_true_phone.append(y_true[i])
+    elif i%6==4:
+        y_pred_email.append(y_pred[i])
+        y_true_email.append(y_true[i])
+    elif i%6==5:
+        y_pred_position.append(y_pred[i])
+        y_true_position.append(y_true[i])
+score_name=metrics.f1_score(y_true_name,y_pred_name)
+score_en_name=metrics.f1_score(y_true_en_name,y_pred_en_name)
+score_tel=metrics.f1_score(y_true_tel,y_pred_tel)
+score_phone=metrics.f1_score(y_true_phone,y_pred_phone)
+score_email=metrics.f1_score(y_true_email,y_pred_email)
+score_position=metrics.f1_score(y_true_position,y_pred_position)
+print(score_name,score_en_name,score_tel,score_phone, score_email,score_position)
+###
+# for i in range(len(predict_list)):
+#     # if len(predict_list[i])!=6:
+#     #     cntchk+=1
+#     for j in range(len(answer)):
+#         if predict_list[i][0]==(answer[j][0]+"_res.pickle"):
+#             # print('---------------')
+#             # for k in range(len(answer[0])-1):
+#             for k in range(4,5):
+#                 if len(answer[j][k+1].replace(' ', ''))!=0:
+#                     cnt+=1
+#                     # print(answer[j][k+1],predict_list[i][k+1])
+#                     # print('---------------------------')
+#                     # print(answer[j][k+1],predict_list[i][k+1])
+#                     cer_value=metric.cer(answer[j][k+1],predict_list[i][k+1])
+#                     if cer_value!=0:
+#                         # print(answer[j][k+1],predict_list[i][k+1],predict_list[i],"check")
+#                         # print(answer[j][k+1],predict_list[i][k+1],"check")
+#                         # print(cer_value)
+#                         cntchk+=1
+#                     cer_value_sum+=cer_value
+# print("CER is",cer_value_sum/cnt)
+# # print(cntchk)
 # print(cnt)
 
 # for i in range(len(answer[0])-1):

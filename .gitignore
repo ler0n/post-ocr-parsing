@@ -5,6 +5,8 @@
 img/
 image/
 res/
+img*
+res*
 res2/
 
 # image files
