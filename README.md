@@ -39,12 +39,36 @@ OCR API로 추출한 텍스트들을 한 줄로 직렬화하고, 각 텍스트�
 ## Repo 구조
 
 ```
-ai_model # AI 모델 구현 관련 폴더
-├─ dataset.py
-├─ model.py
-├─ main.py
-├─ utils.py
-└─ ner_utils.py
+.
+├─ ai_model/ # AI 모델 구현 관련 폴더
+|      ├─ data.py
+|      ├─ dataset.py
+|      ├─ main.py
+|      ├─ model.py
+|      ├─ ner_utils.py
+|      └─ utils.py
+├─ app/ # Rule 기반 모델/AI 기반 모델 결과 도출 프론트엔드 구현 폴더
+|      ├─ static/
+|      |      ├─ index.js
+|      |      └─ style.css
+|      template/
+|      |      └─ test.py
+|      ├─ grouping.py
+|      ├─ main.py
+|      └─ pyproject.toml
+├─ data/ # 데이터 생성 및 제작 관련 폴더
+|      ├─ font/
+|      |      └─ *.ttf
+|      ├─ pickle/
+|      |      ├─ *.pickle
+|      |      └─ tmp.ipynb
+|      ├─ create_info.py
+|      ├─ tmp.ipynb
+|      └─ utils.py
+├─ md_res/ # markdown resource 저장 폴더
+|      └─ *.png
+├─ .gitignore
+└─ README.md
 ```
 ## 참고 자료
 - [https://openreview.net/pdf?id=SJgjf695UB](https://openreview.net/pdf?id=SJgjf695UB)
