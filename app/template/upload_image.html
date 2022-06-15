@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>You Are Awesome!</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reset-css@5.0.1/reset.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/FortAwesome/Font-Awesome@5.14.0/css/all.min.css">
+    <link href="{{ url_for('static', path='/style.css') }}" rel="stylesheet">
+  </head>
+  <body>
+    <h1 class="head">너의 이름은</h1>
+    <div class="cont">
+      <form action="./home" method="post" enctype="multipart/form-data">
+        <div class="button">
+            <label for="chooseFile">
+              명함사진을 선택해주세요
+            </label>
+        </div>
+        <br/>
+        <input class="box" value="명함 선택" type="file" id="chooseFile" name="chooseFile" accept="image/*" onchange="thumbnail(this)" required>
+
+        <!--<canvas id="myCanvas"></canvas>-->
+        <img id="thumbnailImg" class="thumbnail" src="static/base.png">
+
+        <input class="box" value="명함 제출" type="submit" onclick="saveText()">
+      </form>
+    </div>
+
+
+    <script src="{{ url_for('static', path='/index.js') }}"></script>
+
+
+  </body>
+
+
