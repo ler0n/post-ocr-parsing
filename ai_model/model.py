@@ -1,5 +1,3 @@
-import numpy as np
-
 import torch
 from torch.optim import AdamW
 
@@ -8,8 +6,7 @@ import pytorch_lightning as pl
 from transformers import BertForTokenClassification, BertConfig
 from transformers import get_linear_schedule_with_warmup
 
-
-from utils import compute_metrics, get_label_name, get_label_cnt
+from utils import cal_metrics, get_label_name, get_label_cnt
 
 class CardNERClassifier(pl.LightningModule):
     def __init__(self, args):
@@ -69,8 +66,8 @@ class CardNERClassifier(pl.LightningModule):
             pred_list.append(pred)
             label_list.append(truth)
         
-        result = compute_metrics(label_list, pred_list)
+        result = cal_metrics(label_list, pred_list)
         result['val_loss'] = val_loss / len(outputs)
-        self.log('loss', loss, on_step=False, on_epoch=False, prog_bar=True)
+        self.log('loss', loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log_dict(result)
     

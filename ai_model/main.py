@@ -1,4 +1,5 @@
 import os
+import pickle
 import argparse
 
 import pytorch_lightning as pl
@@ -24,6 +25,9 @@ def main(args):
     val_sampler = SequentialSampler(val_dataset)
     val_loader = DataLoader(val_dataset, sampler=val_sampler, batch_size=args.eval_batch_size, num_workers=2)
 
+    with open(os.path.join(args.model_dir, 'args.pickle'), 'wb') as f:
+        pickle.dump(args, f)
+    
     model = CardNERClassifier(args)
     checkpoint_callback = ModelCheckpoint(dirpath=args.model_dir, save_top_k=1, monitor="f1")
 
