@@ -1,4 +1,3 @@
-from math import hypot
 import os
 import json
 import requests
@@ -7,6 +6,8 @@ import pickle
 import torch
 
 import numpy as np
+
+from PIL import Image
 
 from model import CardNERClassifier
 
@@ -168,3 +169,10 @@ def get_api_result(img_path):
     file_dict = {"file": open(img_path, 'rb')}
     response = requests.post(api_url, headers=headers, files=file_dict).json()
     return response
+
+def run_ner_model(img_path, model, tokenizer, device):
+    img_size = Image.open(img_path).size
+    response = get_api_result(img_path)
+    group_info = get_prediction(model, tokenizer, device, response, img_size)
+    card_info = get_card_info(group_info)
+    return card_info
